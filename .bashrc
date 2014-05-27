@@ -3,12 +3,12 @@ screenfetch
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
 
-# If not running interactively, don't do anything
-[ -z "$PS1" ] && return
+# If not running interactively, don't do anything!
+[[ $- != *i* ]] && return
 
-# don't put duplicate lines or lines starting with space in the history.
-# See bash(1) for more options
-HISTCONTROL=ignoreboth
+# don't put duplicate lines in the history. See bash(1) for more options
+# ... or force ignoredups and ignorespace
+HISTCONTROL=ignoredups:ignorespace
 
 # append to the history file, don't overwrite it
 shopt -s histappend
@@ -21,12 +21,8 @@ HISTFILESIZE=2000
 # update the values of LINES and COLUMNS.
 shopt -s checkwinsize
 
-# If set, the pattern "**" used in a pathname expansion context will
-# match all files and zero or more directories and subdirectories.
-#shopt -s globstar
-
 # make less more friendly for non-text input files, see lesspipe(1)
-#[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 
 # set variable identifying the chroot you work in (used in the prompt below)
 if [ -z "$debian_chroot" ] && [ -r /etc/debian_chroot ]; then
@@ -45,33 +41,20 @@ force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-  # We have color support; assume it's compliant with Ecma-48
-  # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
-  # a case would tend to support setf rather than setaf.)
-  color_prompt=yes
+	# We have color support; assume it's compliant with Ecma-48
+	# (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+	# a case would tend to support setf rather than setaf.)
+	color_prompt=yes
     else
-  color_prompt=
+	color_prompt=
     fi
 fi
 
-NONE="\[\033[0m\]"
-GREEN="\[\033[1;32m\]"
-BLUE="\[\033[1;34m\]"
-RED="\[\033[1;31m\]"
-WHITE="\[\033[1;37m\]"
-GREY="\[\033[0;37m\]"
-CYAN="\[\033[0;36m\]"
-
 if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}$GREEN\u@\h:$BLUE\w$NONE\$ " '
-else # No color prompt forced
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
-
-if [ $(id -u) -eq 0 ]; then
-    PS1="${debian_chroot:+($debian_chroot)}$RED\u@\h$NONE:$BLUE\w$NONE\$ "
-fi
-
 unset color_prompt force_color_prompt
 
 # If this is an xterm set the title to user@host:dir
@@ -96,34 +79,31 @@ if [ -x /usr/bin/dircolors ]; then
 fi
 
 # some more ls aliases
-alias ll='ls -lbhc -sort'
-#alias la='ls -A'
-alias l='ls -lBohc'
+alias ll='ls -hBlF'
+alias la='ls -A'
+alias l='ls -CF'
 
-
-# CUSTOM ALIASES
+#MY PERSONAL ALIASES
 alias ..='cd ..'
 alias ...='cd ../../'
 alias aptu='sudo apt-get update'
 alias apti='sudo apt-get install'
 alias aptr='sudo apt-get remove'
 alias apts='sudo apt-cache search'
-alias hs='history | grep -i $i'
-alias rb='sudo reboot'
 alias svi='sudo vi'
-alias startservice='sudo service $i start'
-alias stopservice='sudo service $i stop'
-alias restartservice='sudo service $i restart'
-alias statuservice='sudo service $i status'
-alias connectkeyboard='bluez-test-input connect 20:73:AB:10:C5:8C'
-alias temp='vcgencmd measure_temp'
+alias temp='sensors'
+alias temp-gui='xsensors'
 alias rmdir='sudo rm -rf'
 alias reboot='sudo /sbin/reboot'
-alias grep='grep -i'
 alias free='free -h'
-alias iftop='sudo iftop -B'
-function search() { locate "$1" | grep --color "$1"; }
+alias iftop='sudo iftop -B -i $1'
+alias rdp='remmina'
+#END OF MY PERSONAL ALIASES
 
+
+# Add an "alert" alias for long running commands.  Use like so:
+#   sleep 10; alert
+alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 # Alias definitions.
 # You may want to put all your additions into a separate file like
@@ -137,13 +117,12 @@ fi
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
-if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
+if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
     . /etc/bash_completion
-  fi
 fi
+
+
+#CUSTOM STUFF AGAIN
 
 export EDITOR=vi
 
@@ -164,69 +143,4 @@ esac
 # from a database of quotations at logon and/or logout.
 # If you wish to use it, please install "fortune-mod" from the
 # official repositories, then uncomment the following line:
-
 # [[ "$PS1" ]] && /usr/bin/fortune
-
-# Set colorful PS1 only on colorful terminals.
-# dircolors --print-database uses its own built-in database
-# instead of using /etc/DIR_COLORS. Try to use the external file
-# first to take advantage of user additions. Use internal bash
-# globbing instead of external grep binary.
-
-# sanitize TERM:
-safe_term=${TERM//[^[:alnum:]]/?}
-match_lhs=""
-
-[[ -f ~/.dir_colors ]] && match_lhs="${match_lhs}$(<~/.dir_colors)"
-[[ -f /etc/DIR_COLORS ]] && match_lhs="${match_lhs}$(</etc/DIR_COLORS)"
-[[ -z ${match_lhs} ]] \
-	&& type -P dircolors >/dev/null \
-	&& match_lhs=$(dircolors --print-database)
-
-if [[ $'\n'${match_lhs} == *$'\n'"TERM "${safe_term}* ]] ; then
-	
-	# we have colors :-)
-
-	# Enable colors for ls, etc. Prefer ~/.dir_colors
-	if type -P dircolors >/dev/null ; then
-		if [[ -f ~/.dir_colors ]] ; then
-			eval $(dircolors -b ~/.dir_colors)
-		elif [[ -f /etc/DIR_COLORS ]] ; then
-			eval $(dircolors -b /etc/DIR_COLORS)
-		fi
-	fi
-
-	#PS1="$(if [[ ${EUID} == 0 ]]; then echo '\[\033[01;31m\]\h'; else echo '\[\033[01;32m\]\u@\h'; fi)\[\033[01;34m\] \w \$([[ \$? != 0 ]] && echo \"\[\033[01;31m\]:(\[\033[01;34m\] \")\\$\[\033[00m\] \"
-
-	# Use this other PS1 string if you want \W for root and \w for all other users:
-	 PS1="$(if [[ ${EUID} == 0 ]]; then echo '\[\033[01;31m\]\h\[\033[01;34m\] \W'; else echo '\[\033[01;32m\]\u@\h\[\033[01;34m\] \w'; fi) \$([[ \$? != 0 ]] && echo \"\[\033[01;31m\]:(\[\033[01;34m\] \")\\$\[\033[00m\] "
-
-	# Uncomment the "Color" line in /etc/pacman.conf instead of uncommenting the following line...!
-
-	# alias pacman="pacman --color=auto"
-
-else
-
-	# show root@ when we do not have colors
-
-	PS1="\u@\h \w \$([[ \$? != 0 ]] && echo \":( \")\$ "
-
-	# Use this other PS1 string if you want \W for root and \w for all other users:
-	# PS1="\u@\h $(if [[ ${EUID} == 0 ]]; then echo '\W'; else echo '\w'; fi) \$([[ \$? != 0 ]] && echo \":( \")\$ "
-
-fi
-
-PS2="> "
-PS3="> "
-PS4="+ "
-
-# Try to keep environment pollution down, EPA loves us.
-unset safe_term match_lhs
-
-# Try to enable the auto-completion (type: "pacman -S bash-completion" to install it).
-[ -r /usr/share/bash-completion/bash_completion ] && . /usr/share/bash-completion/bash_completion
-
-# Try to enable the "Command not found" hook ("pacman -S pkgfile" to install it).
-# See also: https://wiki.archlinux.org/index.php/Bash#The_.22command_not_found.22_hook
-[ -r /usr/share/doc/pkgfile/command-not-found.bash ] && . /usr/share/doc/pkgfile/command-not-found.bash
-
