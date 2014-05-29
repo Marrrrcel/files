@@ -1,4 +1,5 @@
-screenfetch
+#export JOBCOUNT=jobs | wc -l
+#screenfetch
 # ~/.bashrc: executed by bash(1) for non-login shells.
 # see /usr/share/doc/bash/examples/startup-files (in the package bash-doc)
 # for examples
@@ -51,7 +52,8 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    #PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;90m\]\u\[\033[01;32m\]@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -96,8 +98,11 @@ alias temp-gui='xsensors'
 alias rmdir='sudo rm -rf'
 alias reboot='sudo /sbin/reboot'
 alias free='free -h'
-alias iftop='sudo iftop -B -i $1'
+alias iftop='sudo iftop -B -i eth0'
 alias rdp='remmina'
+alias groupadd='useradd -G $1 -name $2'
+alias mount-babylon='sshfs babylon-2@62.159.114.118:/ /home/marcel/mounts/Babylon/'
+alias umount-babylon='fusermount -u /home/marcel/mounts/Babylon/'
 #END OF MY PERSONAL ALIASES
 
 
@@ -130,6 +135,8 @@ export EDITOR=vi
 # Enable history appending instead of overwriting.
 shopt -s histappend
 
+test=jobs | wc -l
+
 case ${TERM} in
 	xterm*|rxvt*|Eterm|aterm|kterm|gnome*)
 		PROMPT_COMMAND=${PROMPT_COMMAND:+$PROMPT_COMMAND; }'printf "\033]0;%s@%s:%s\007" "${USER}" "${HOSTNAME%%.*}" "${PWD/#$HOME/~}"'
@@ -144,3 +151,4 @@ esac
 # If you wish to use it, please install "fortune-mod" from the
 # official repositories, then uncomment the following line:
 # [[ "$PS1" ]] && /usr/bin/fortune
+
